@@ -8,7 +8,10 @@ const MyProfile = () => {
     image: assets.profile_pic,
     email: "edwardvincent@gmail.com",
     phone: '+66 617736759',
-    address: 'Srinakarin Road, Asakan Place Suan Luang Subdistrict, Suan Luang District, Bangkok',
+    address: {
+      line1: 'Srinakarin Road, Asakan Place',
+      line2: 'Suan Luang Subdistrict, Suan Luang District, Bangkok'
+    },
     gender: 'Male',
     dob: '2000-02-01'
   })
@@ -19,9 +22,21 @@ const MyProfile = () => {
   
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setUserData((prev) => ({
-      ...prev, [name]: value
-    }))
+    
+    if (name === 'addressLine1' || name === 'addressLine2') {
+      setUserData((prev) => ({
+        ...prev,
+        address: {
+          ...prev.address,
+          [name === 'addressLine1' ? 'line1' : 'line2']: value
+        }
+      }))
+    } else {
+      setUserData((prev) => ({
+        ...prev,
+        [name]: value
+      }))
+    }
   }
 
   const handleImageChange = (e) => {
@@ -38,15 +53,23 @@ const MyProfile = () => {
 
     //example of sending image via FormData to API
     const form = new FormData();
-    form.append('name', form.name)
-    form.append('phone', form.phone)
-    form.append('address', form.address)
-    form.append('gender', form.gender)
-    form.append('dob', form.dob)
+    form.append('name', userData.name)
+    form.append('phone', userData.phone)
+    form.append('addressLine1', userData.address.line1)
+    form.append('addressLine2', userData.address.line2)
+    form.append('gender', userData.gender)
+    form.append('dob', userData.dob)
     if(imageFile) form.append('image', imageFile)
     
-    console.log("Submitting image:",{...FormData, imageFile});
-    //Example: await fetch('/api/upload', {method: 'POST', body: formData})
+    //Update image preview in user data
+    if (preview) {
+      setUserData((prev) => ({
+        ...prev, image: preview   // Update image shown on the profile
+      }))
+    }
+
+    console.log('Updated info:', userData);
+    
     
     setIsEdit(false);
   }
@@ -75,7 +98,9 @@ const MyProfile = () => {
           <p className='text-blue-400'>{userData.phone}</p>
           <p className='font-medium'>Address:</p>
           <p className='text-gray-500'>
-            {userData.address}
+            {userData.address.line1}
+            <br />
+            {userData.address.line2}
           </p>
         </div>
         <p className='text-neutral-500 underline mt-3'>BASIC INFORMATION</p>
@@ -93,14 +118,17 @@ const MyProfile = () => {
         <button onClick={() => setIsEdit(true)} className='border-primary border px-5 py-1 text-md rounded mt-10 overflow-hidden cursor-pointer hover:bg-primary hover:text-white transition-all'>Edit</button>
         {
           isEdit && (
-            <div className='fixed inset-0  bg-opacity-50 flex justify-center items-center z-50'>
-              <div className='bg-white p-6 rounded-xl shadow-lg w-full max-w-md'>
+            <div className='fixed inset-0 bg-white bg-opacity-50 flex justify-center items-center z-50 h-screen overflow-y-auto touch-auto'>
+              <div className='bg-white p-6 rounded-xl shadow-lg w-full max-w-md border border-gray-300'>
                 <h2 className='text-xl font-semibold mb-4'>Update User Info</h2>
                 <form onSubmit={handleSubmit} className='space-y-4' action="">
 
                   {/* Image Upload section */}
                   <div>
-                    <img src={preview} alt="Preview" className='w-28 h-28 rounded-full object-cover border mb-2' />
+                    <img
+                      src={preview || userData.image}
+                      alt="Preview"
+                      className='w-28 h-28 rounded-full object-cover border mb-2' />
                     <input type="file" accept='image/*' onChange={handleImageChange} className='text-sm' />
                   </div>
 
@@ -124,12 +152,19 @@ const MyProfile = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium">Address</label>
-                    <textarea
-                      name='address'
-                      value={userData.address}
+                    <input
+                      type="text"
+                      name='addressLine1'
+                      value={userData.address.line1}
                       onChange={handleChange}
                       className='mt-1 w-full border border-gray-300 rounded-md p-2'
-                      rows={3}
+                    />
+                    <input
+                      type="text"
+                      name='addressLine2'
+                      value={userData.address.line2}
+                      onChange={handleChange}
+                      className='mt-1 w-full border border-gray-300 rounded-md p-2'
                     />
                   </div>
                   <div>
